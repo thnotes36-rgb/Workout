@@ -21,7 +21,9 @@ import {
   Info,
   Maximize2,
   ArrowRight,
-  ChevronUp
+  Volume2,
+  Square,
+  Activity
 } from 'lucide-react';
 
 // --- Constants & Types ---
@@ -46,52 +48,29 @@ const PPL_SCHEDULE = {
 
 const EXERCISES = {
   [WORKOUT_TYPES.PUSH]: ['Push-ups', 'Bench dips', 'Lateral raises (backpack)', 'Neck curls', 'Flat leg raises'],
-  [WORKOUT_TYPES.PULL]: ['Pull-ups', 'One-hand rows (backpack)', 'Hammer curls (backpack)', 'Neck curls', 'Flat leg raises'],
-  [WORKOUT_TYPES.LEGS]: ['Squats', 'Bulgarian split squats', 'Neck curls', 'Flat leg raises'],
+  [WORKOUT_TYPES.PULL]: ['Pull-ups', 'One-hand shrugs (backpack)', 'Hammer curls (backpack)', 'Neck curls', 'Flat leg raises'],
+  [WORKOUT_TYPES.LEGS]: ['Squats', 'Bulgarian split squats', 'Nordic curls', 'Neck curls', 'Flat leg raises'],
   [WORKOUT_TYPES.REST]: ['Optional rest', 'Full body stretch', 'Meditation']
 };
 
 const EXERCISE_GUIDES: Record<string, { steps: string[] }> = {
-  'Push-ups': {
-    steps: ['Plank position, hands shoulder-width.', 'Lower chest to floor, elbows at 45°.', 'Push back up, locking core.']
-  },
-  'Bench dips': {
-    steps: ['Hands on edge, feet out.', 'Lower hips toward floor by bending elbows.', 'Push back up to full extension.']
-  },
-  'Lateral raises (backpack)': {
-    steps: ['Hold backpack by top handle.', 'Raise arms to side until shoulder level.', 'Lower slowly with control.']
-  },
-  'Neck curls': {
-    steps: ['Lie flat on back, neck slightly off.', 'Curl chin toward chest.', 'Return to start without resting head.']
-  },
-  'Flat leg raises': {
-    steps: ['Lie on back, hands under glutes.', 'Lift legs to 90° while keeping straight.', 'Lower slowly, don\'t touch floor.']
-  },
-  'Pull-ups': {
-    steps: ['Overhand grip, slightly wider than shoulders.', 'Pull chest toward bar, squeeze lats.', 'Lower with full control.']
-  },
-  'One-hand rows (backpack)': {
-    steps: ['Bent over, one hand on support.', 'Pull backpack toward hip, elbow back.', 'Squeeze shoulder blade at top.']
-  },
-  'Hammer curls (backpack)': {
-    steps: ['Hold backpack straps vertically.', 'Curl toward shoulders without swinging.', 'Full extension at the bottom.']
-  },
-  'Squats': {
-    steps: ['Feet shoulder-width, chest up.', 'Lower hips as if sitting back.', 'Drive through heels to stand.']
-  },
-  'Bulgarian split squats': {
-    steps: ['One foot back on chair/bench.', 'Lower front knee to 90° angle.', 'Keep torso upright, push through front foot.']
-  },
-  'Optional rest': {
-    steps: ['Breathe deeply.', 'Hydrate and recover.', 'Prepare for next session.']
-  },
-  'Full body stretch': {
-    steps: ['Reach for toes.', 'Overhead tricep stretch.', 'Child\'s pose for 60 seconds.']
-  },
-  'Meditation': {
-    steps: ['Cross legs, back straight.', 'Close eyes, focus on breath.', 'Observe thoughts without judgment.']
-  }
+  'Push-ups': { steps: ['Plank position, hands shoulder-width.', 'Lower chest to floor, elbows at 45°.', 'Push back up, locking core.'] },
+  'Bench dips': { steps: ['Hands on edge, feet out.', 'Lower hips toward floor by bending elbows.', 'Push back up to full extension.'] },
+  'Lateral raises (backpack)': { steps: ['Hold backpack by top handle.', 'Raise arms to side until shoulder level.', 'Lower slowly with control.'] },
+  'Neck curls': { steps: ['Lie flat on back, neck slightly off.', 'Curl chin toward chest.', 'Return to start without resting head.'] },
+  'Flat leg raises': { steps: ['Lie on back, hands under glutes.', 'Lift legs to 90° while keeping straight.', 'Lower slowly, don\'t touch floor.'] },
+  'Pull-ups': { steps: ['Overhand grip, slightly wider than shoulders.', 'Pull chest toward bar, squeeze lats.', 'Lower with full control.'] },
+  'One-hand shrugs (backpack)': { steps: ['Hold backpack by top handle at your side.', 'Raise your shoulder toward your ear as high as possible.', 'Squeeze for a second and lower with control.'] },
+  'Hammer curls (backpack)': { steps: ['Hold backpack straps vertically.', 'Curl toward shoulders without swinging.', 'Full extension at the bottom.'] },
+  'Squats': { steps: ['Feet shoulder-width, chest up.', 'Lower hips as if sitting back.', 'Drive through heels to stand.'] },
+  'Bulgarian split squats': { steps: ['One foot back on chair/bench.', 'Lower front knee to 90° angle.', 'Keep torso upright, push through front foot.'] },
+  'Nordic curls': { steps: ['Kneel on a soft surface with ankles secured by a heavy object or partner.', 'Slowly lower your torso toward the ground, using your hamstrings to resist.', 'Use your hands to catch yourself and push back to start.'] },
+  'Optional rest': { steps: ['Breathe deeply.', 'Hydrate and recover.', 'Prepare for next session.'] },
+  'Full body stretch': { steps: ['Reach for toes.', 'Overhead tricep stretch.', 'Child\'s pose for 60 seconds.'] },
+  'Meditation': { steps: ['Cross legs, back straight.', 'Close eyes, focus on breath.', 'Observe thoughts without judgment.'] }
 };
+
+const ZEN_FLUTE_URL = 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=meditation-flute-11100.mp3';
 
 const STROOP_COLORS = [
   { name: 'RED', value: '#EF4444' },
@@ -101,11 +80,18 @@ const STROOP_COLORS = [
   { name: 'PURPLE', value: '#8B5CF6' }
 ];
 
+// --- Helper for Date Detection ---
+const getTodayString = () => {
+  const dayIndex = new Date().getDay(); // 0 (Sun) to 6 (Sat)
+  const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+  return DAYS[adjustedIndex];
+};
+
 // --- Components ---
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<'Body' | 'Mind'>('Body');
-  const [selectedDay, setSelectedDay] = useState<string>(DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
+  const [selectedDay, setSelectedDay] = useState<string>(getTodayString());
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [workoutStarted, setWorkoutStarted] = useState(false);
@@ -114,13 +100,46 @@ const App = () => {
   const [activeMindGame, setActiveMindGame] = useState<string | null>(null);
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [showSteps, setShowSteps] = useState(false);
+  const [showMusic, setShowMusic] = useState(false);
 
+  // Today marker constant
+  const today = getTodayString();
+
+  // Music State
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Initialize Audio
   useEffect(() => {
-    audioRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=meditation-flute-11100.mp3");
-    audioRef.current.loop = true;
+    const audio = new Audio(ZEN_FLUTE_URL);
+    audio.loop = true;
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
   }, []);
+
+  // Control Audio Playback
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const syncAudio = async () => {
+      try {
+        if (isMusicPlaying) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+      } catch (err) {
+        console.warn("Playback failed. Browser might require user interaction.", err);
+        setIsMusicPlaying(false);
+      }
+    };
+
+    syncAudio();
+  }, [isMusicPlaying]);
 
   useEffect(() => {
     let interval: any;
@@ -128,15 +147,14 @@ const App = () => {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-      audioRef.current?.play().catch(() => {});
     } else {
       clearInterval(interval);
-      audioRef.current?.pause();
     }
 
     if (timeLeft === 0 && workoutStarted) {
       setWorkoutStarted(false);
       setIsTimerActive(false);
+      setIsMusicPlaying(false);
       setShowSuccess(true);
     }
 
@@ -152,6 +170,7 @@ const App = () => {
   const handleStartWorkout = () => {
     setWorkoutStarted(true);
     setIsTimerActive(true);
+    setIsMusicPlaying(true);
     setCompletedExercises([]);
     setActiveExerciseIdx(0);
   };
@@ -168,9 +187,15 @@ const App = () => {
   const resetWorkout = () => {
     setWorkoutStarted(false);
     setIsTimerActive(false);
+    setIsMusicPlaying(false);
     setTimeLeft(1800);
     setShowSuccess(false);
     setShowSteps(false);
+    setShowMusic(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   const currentExercises = EXERCISES[PPL_SCHEDULE[selectedDay]];
@@ -191,7 +216,7 @@ const App = () => {
             <p className="text-amber-400 text-xs font-black tracking-[0.2em] uppercase mb-2">Morning Mastery 4:00 - 6:00</p>
             <h1 className="text-4xl font-black mb-4 tracking-tight uppercase">Rise & Conquer</h1>
             <div className="bg-slate-800/50 backdrop-blur p-4 rounded-2xl border border-slate-700 shadow-inner">
-              <p className="italic text-slate-300 text-sm leading-relaxed">"Master the body, and the mind will follow."</p>
+              <p className="italic text-slate-300 text-sm leading-relaxed">"Master the mind, sharpen the iron."</p>
             </div>
           </header>
 
@@ -200,13 +225,19 @@ const App = () => {
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
-                className={`px-5 py-3 rounded-2xl text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest ${
+                className={`relative px-5 py-3 rounded-2xl text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest ${
                   selectedDay === day 
                     ? 'bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/30 ring-2 ring-amber-500/50' 
                     : 'bg-slate-800 text-slate-500 border border-slate-700'
                 }`}
               >
                 {day.substring(0, 3)}
+                {day === today && (
+                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                     <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                   </span>
+                )}
               </button>
             ))}
           </div>
@@ -238,7 +269,7 @@ const App = () => {
                 <div className="flex items-center justify-between px-2">
                   <div>
                     <h2 className="text-2xl font-black text-white tracking-tight">{PPL_SCHEDULE[selectedDay]} DAY</h2>
-                    <p className="text-slate-500 text-[10px] font-black tracking-[0.2em] uppercase">Step-by-Step Elite Guide</p>
+                    <p className="text-slate-500 text-[10px] font-black tracking-[0.2em] uppercase">Step-by-Step Training</p>
                   </div>
                   <div className="bg-amber-500/10 text-amber-500 p-3 rounded-2xl border border-amber-500/20 shadow-xl">
                     <Clock size={24} />
@@ -253,7 +284,7 @@ const App = () => {
                       </div>
                       <div className="flex-1">
                         <span className="font-bold text-slate-200 block tracking-tight">{ex}</span>
-                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Movement Integrity</span>
+                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Absolute Form</span>
                       </div>
                     </div>
                   ))}
@@ -332,17 +363,35 @@ const App = () => {
               </button>
 
               <button 
-                onClick={() => setShowSteps(!showSteps)}
-                className={`w-16 h-16 rounded-3xl flex items-center justify-center bg-slate-900/50 text-slate-500 active:scale-90 border border-slate-800 hover:text-white transition-all shadow-xl ${showSteps ? 'text-amber-500 border-amber-500/30' : ''}`}
+                onClick={() => setShowMusic(true)}
+                className={`w-16 h-16 rounded-3xl flex items-center justify-center bg-slate-900/50 text-slate-500 active:scale-90 border border-slate-800 hover:text-white transition-all shadow-xl ${isMusicPlaying ? 'text-amber-500 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : ''}`}
               >
-                <Info size={28} />
+                <Music size={28} />
               </button>
             </div>
+
+            {/* Now Playing Bar */}
+            {isMusicPlaying && (
+              <div className="mt-12 bg-slate-900/40 backdrop-blur-xl border border-slate-800 px-6 py-3 rounded-full flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 z-10">
+                <div className="flex gap-1 items-end h-3">
+                  <div className="w-1 bg-amber-500 animate-bounce h-2" />
+                  <div className="w-1 bg-amber-500 animate-bounce h-3 delay-75" />
+                  <div className="w-1 bg-amber-500 animate-bounce h-1 delay-150" />
+                </div>
+                <span className="text-[10px] font-black tracking-widest uppercase text-slate-300">ZEN FLUTE</span>
+              </div>
+            )}
           </div>
 
           {/* Quick Exercise Navigator - Bottom Bar */}
           <div className="absolute bottom-10 left-0 right-0 px-6">
             <div className="flex gap-3 overflow-x-auto no-scrollbar py-4 scroll-smooth">
+               <button 
+                  onClick={() => setShowSteps(true)}
+                  className="px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest bg-slate-800 border-2 border-slate-700 text-slate-400 shrink-0 flex items-center gap-3"
+                >
+                  <Info size={14} /> Guide
+                </button>
               {currentExercises.map((ex, i) => (
                 <button 
                   key={i}
@@ -360,13 +409,19 @@ const App = () => {
             </div>
           </div>
 
+          {/* Music Control Sheet */}
+          {showMusic && (
+            <MusicSheet 
+              onClose={() => setShowMusic(false)} 
+              isMusicPlaying={isMusicPlaying}
+              setIsMusicPlaying={setIsMusicPlaying}
+            />
+          )}
+
           {/* Bottom Sheet for Steps */}
           {showSteps && (
             <div className="absolute inset-0 z-[60] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                onClick={() => setShowSteps(false)}
-              />
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowSteps(false)} />
               <div className="bg-slate-900 rounded-t-[48px] p-8 border-t border-slate-800 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] z-10 animate-in slide-in-from-bottom duration-300">
                 <div className="w-12 h-1.5 bg-slate-800 mx-auto mb-8 rounded-full" />
                 <h3 className="text-xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
@@ -383,12 +438,7 @@ const App = () => {
                     </div>
                   ))}
                 </div>
-                <button 
-                  onClick={() => setShowSteps(false)}
-                  className="w-full mt-8 bg-slate-800 py-5 rounded-[24px] font-black text-slate-400 uppercase tracking-widest active:scale-95 transition-all"
-                >
-                  Return to Focus
-                </button>
+                <button onClick={() => setShowSteps(false)} className="w-full mt-8 bg-slate-800 py-5 rounded-[24px] font-black text-slate-400 uppercase tracking-widest active:scale-95 transition-all">Return to Focus</button>
               </div>
             </div>
           )}
@@ -405,14 +455,9 @@ const App = () => {
             <h2 className="text-4xl font-black mb-4 tracking-tighter mt-4 uppercase">Victory</h2>
             <div className="h-1 w-12 bg-amber-500 mx-auto mb-6 rounded-full" />
             <p className="text-slate-400 mb-10 text-xs font-black uppercase tracking-widest leading-loose text-center">
-              Training Session Concluded.<br/>Physical Potential Unlocked.
+              Morning Discipline Complete.<br/>iron Sharpened Iron.
             </p>
-            <button
-              onClick={resetWorkout}
-              className="w-full bg-amber-500 text-slate-900 font-black py-5 rounded-[28px] shadow-2xl shadow-amber-500/30 text-lg uppercase tracking-widest"
-            >
-              OWN THE DAY
-            </button>
+            <button onClick={resetWorkout} className="w-full bg-amber-500 text-slate-900 font-black py-5 rounded-[28px] shadow-2xl shadow-amber-500/30 text-lg uppercase tracking-widest">OWN THE DAY</button>
           </div>
         </div>
       )}
@@ -424,6 +469,56 @@ const App = () => {
       {activeMindGame && activeMindGame !== 'Stroop' && (
         <GenericMindTool name={activeMindGame} onClose={() => setActiveMindGame(null)} />
       )}
+    </div>
+  );
+};
+
+// --- Music Component (Simplified to 1 track) ---
+
+const MusicSheet = ({ onClose, isMusicPlaying, setIsMusicPlaying }: any) => {
+  return (
+    <div className="absolute inset-0 z-[70] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
+      <div className="bg-slate-900 rounded-t-[56px] p-8 border-t border-slate-800 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] z-10 animate-in slide-in-from-bottom duration-300 flex flex-col">
+        <div className="w-16 h-1.5 bg-slate-800 mx-auto mb-8 rounded-full" />
+        
+        {/* Active Track Header */}
+        <div className="bg-slate-950 p-10 rounded-[40px] border border-amber-500/20 mb-8 flex flex-col items-center text-center shadow-2xl">
+           <div className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center mb-6 relative">
+             <Music size={40} className={`transition-transform duration-500 ${isMusicPlaying ? 'text-amber-500 scale-110' : 'text-slate-600'}`} />
+             {isMusicPlaying && (
+               <div className="absolute inset-0 rounded-full border-2 border-amber-500/40 animate-ping" />
+             )}
+           </div>
+           <h4 className="text-3xl font-black text-white uppercase tracking-tight">ZEN FLUTE</h4>
+           <p className="text-amber-500 font-black text-xs tracking-[0.4em] uppercase mt-3">MIND FLOW MODE</p>
+           
+           {/* Controls */}
+           <div className="flex items-center gap-8 mt-12">
+             <button 
+               onClick={() => { setIsMusicPlaying(false); }} 
+               className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 active:scale-90 transition-all border border-slate-800"
+               title="Stop Music"
+             >
+               <Square size={24} fill="currentColor" />
+             </button>
+             <button 
+               onClick={() => setIsMusicPlaying(!isMusicPlaying)} 
+               className="w-28 h-28 rounded-full bg-amber-500 flex items-center justify-center text-slate-900 shadow-xl shadow-amber-500/20 active:scale-95 transition-all"
+             >
+               {isMusicPlaying ? <Pause size={48} strokeWidth={3} /> : <Play size={48} fill="currentColor" />}
+             </button>
+             <button className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 active:scale-90 transition-all border border-slate-800">
+               <Volume2 size={24} />
+             </button>
+           </div>
+        </div>
+
+        <div className="flex flex-col gap-4 mb-4">
+           <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] text-center">Exclusive Audio Channel</p>
+           <button onClick={onClose} className="w-full py-6 rounded-[28px] font-black bg-slate-800 text-slate-400 uppercase tracking-widest active:scale-95 transition-all">Close Library</button>
+        </div>
+      </div>
     </div>
   );
 };
