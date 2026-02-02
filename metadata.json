@@ -1,0 +1,7 @@
+{
+  "description": "Fitness & Mind-Control Application with PPL System and Mind Focus Games.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "name": "App"
+}
